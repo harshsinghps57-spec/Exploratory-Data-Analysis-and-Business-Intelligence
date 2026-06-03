@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexPlanet - Superstore BI & EDA Dashboard</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(17, 24, 39, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --font-family: 'Outfit', sans-serif;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+                radial-gradient(at 90% 10%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
+                radial-gradient(at 50% 80%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+            overflow-x: hidden;
+        }
+
+        /* Container Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Header Styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 1.5rem;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-green));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+
+        .header-title h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #9ca3af);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-title p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .meta-info {
+            text-align: right;
+        }
+
+        .badge {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+            padding: 4px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            display: inline-block;
+        }
+
+        /* Filter Controls */
+        .controls-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-filter {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-filter:hover {
+            color: var(--text-primary);
+        }
+
+        .btn-filter.active {
+            background: var(--accent-blue);
+            color: white;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+        }
+
+        /* KPI Card Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-blue);
+        }
+
+        .kpi-card.sales-card::before { background: var(--accent-blue); }
+        .kpi-card.profit-card::before { background: var(--accent-green); }
+        .kpi-card.margin-card::before { background: #a855f7; }
+        .kpi-card.delay-card::before { background: var(--accent-orange); }
+
+        .kpi-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            background: linear-gradient(to right, #ffffff, #e5e7eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .kpi-footer {
+            display: flex;
+            align-items: center;
+            margin-top: 12px;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+
+        .kpi-trend {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .trend-up { color: var(--accent-green); }
+        .trend-down { color: var(--accent-red); }
+        .kpi-footer-text { color: var(--text-secondary); }
+
+        /* Main Chart Area */
+        .chart-main-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .chart-main-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-box-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-box-title span {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+        }
+
+        /* Minor Charts Row */
+        .chart-secondary-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 500px) {
+            .chart-secondary-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Insight Banner */
+        .insight-banner {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(16, 185, 129, 0.08));
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 16px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .insight-icon {
+            font-size: 1.4rem;
+            color: var(--accent-blue);
+        }
+
+        .insight-text h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: white;
+        }
+
+        .insight-text p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Dashboard Header -->
+        <header>
+            <div class="header-logo">
+                <div class="logo-icon">AP</div>
+                <div class="header-title">
+                    <h1>Superstore Business Intelligence Dashboard</h1>
+                    <p>Interactive Exploratory Data Analysis & KPI Mock-up (Week 2 Internship Task)</p>
+                </div>
+            </div>
+            <div class="meta-info">
+                <span class="badge">ApexPlanet Software Pvt. Ltd.</span>
+            </div>
+        </header>
+
+        <!-- Dynamic Insights Banner -->
+        <div class="insight-banner">
+            <div class="insight-icon">💡</div>
+            <div class="insight-text">
+                <h4 id="insight-title">Executive Key Insight</h4>
+                <p id="insight-desc">Loading data insights...</p>
+            </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <section class="controls-section">
+            <div class="filter-group">
+                <span class="filter-label">Customer Segment:</span>
+                <div class="btn-group" id="segment-filters">
+                    <button class="btn-filter active" onclick="applyFilter('All', 'segment')">All</button>
+                    <button class="btn-filter" onclick="applyFilter('Consumer', 'segment')">Consumer</button>
+                    <button class="btn-filter" onclick="applyFilter('Corporate', 'segment')">Corporate</button>
+                    <button class="btn-filter" onclick="applyFilter('Home Office', 'segment')">Home Office</button>
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Sales Region:</span>
+                <div class="btn-group" id="region-filters">
+                    <button class="btn-filter active" onclick="applyFilter('All', 'region')">All</button>
+                    <button class="btn-filter" onclick="applyFilter('West', 'region')">West</button>
+                    <button class="btn-filter" onclick="applyFilter('East', 'region')">East</button>
+                    <button class="btn-filter" onclick="applyFilter('Central', 'region')">Central</button>
+                    <button class="btn-filter" onclick="applyFilter('South', 'region')">South</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- KPI Grid -->
+        <section class="kpi-grid">
+            <!-- KPI 1: Sales -->
+            <div class="kpi-card sales-card">
+                <div class="kpi-title">Total Revenue (Sales)</div>
+                <div class="kpi-value" id="kpi-sales">$0.00</div>
+                <div class="kpi-footer">
+                    <span class="kpi-trend trend-up">▲ Dynamic</span>
+                    <span class="kpi-footer-text">across filtered segment</span>
+                </div>
+            </div>
+            <!-- KPI 2: Profit -->
+            <div class="kpi-card profit-card">
+                <div class="kpi-title">Total Operating Profit</div>
+                <div class="kpi-value" id="kpi-profit">$0.00</div>
+                <div class="kpi-footer">
+                    <span class="kpi-trend trend-up" id="kpi-profit-trend">▲ Positive</span>
+                    <span class="kpi-footer-text">net profit generated</span>
+                </div>
+            </div>
+            <!-- KPI 3: Margin -->
+            <div class="kpi-card margin-card">
+                <div class="kpi-title">Operating Profit Margin %</div>
+                <div class="kpi-value" id="kpi-margin">0.0%</div>
+                <div class="kpi-footer">
+                    <span class="kpi-trend" id="kpi-margin-trend">Avg. 12.0%</span>
+                    <span class="kpi-footer-text">profitability efficiency</span>
+                </div>
+            </div>
+            <!-- KPI 4: Ship Delay -->
+            <div class="kpi-card delay-card">
+                <div class="kpi-title">Avg. Shipping Delay</div>
+                <div class="kpi-value" id="kpi-delay">0.0 Days</div>
+                <div class="kpi-footer">
+                    <span class="kpi-trend" style="color: var(--accent-orange)">⏱ Target &lt; 4d</span>
+                    <span class="kpi-footer-text">order-to-ship speed</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Grid 1 -->
+        <div class="chart-main-row">
+            <!-- Chart 1: Monthly Trend -->
+            <div class="chart-box">
+                <div class="chart-box-title">
+                    Monthly Sales & Profit Performance Trend
+                    <span>Time Series</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <!-- Chart 2: Discount Bands Margin -->
+            <div class="chart-box">
+                <div class="chart-box-title">
+                    Profit Margin % by Discount Band
+                    <span>Pricing Impact</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="discountChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid 2 -->
+        <div class="chart-secondary-row">
+            <!-- Chart 3: Category Performance -->
+            <div class="chart-box">
+                <div class="chart-box-title">
+                    Revenue & Profit Contribution by Category
+                    <span>Product Mix</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <!-- Chart 4: Sub-category Loss leaders -->
+            <div class="chart-box">
+                <div class="chart-box-title">
+                    Top Product Sub-Categories by Loss Amount
+                    <span>Leakage Analysis</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="lossChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load data file -->
+    <script src="data.js"></script>
+    <script>
+        // Global chart variables to handle updates
+        let trendChartObj = null;
+        let discountChartObj = null;
+        let categoryChartObj = null;
+        let lossChartObj = null;
+
+        // Current filter values
+        let currentSegment = 'All';
+        let currentRegion = 'All';
+
+        // Format currency helper
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            }).format(val);
+        }
+
+        // Apply filters dynamically
+        function applyFilter(value, type) {
+            // Update Active Buttons
+            const containerId = type === 'segment' ? 'segment-filters' : 'region-filters';
+            const buttons = document.querySelectorAll(`#${containerId} .btn-filter`);
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Find the button with matching text/action and set active
+            event.target.classList.add('active');
+
+            if (type === 'segment') {
+                currentSegment = value;
+                // If filtering by segment, reset region filters button visually
+                if (value !== 'All') {
+                    resetFilterGroupVisuals('region-filters');
+                    currentRegion = 'All';
+                }
+            } else {
+                currentRegion = value;
+                // If filtering by region, reset segment filters button visually
+                if (value !== 'All') {
+                    resetFilterGroupVisuals('segment-filters');
+                    currentSegment = 'All';
+                }
+            }
+
+            updateDashboard();
+        }
+
+        function resetFilterGroupVisuals(containerId) {
+            const buttons = document.querySelectorAll(`#${containerId} .btn-filter`);
+            buttons.forEach(btn => {
+                if (btn.innerText === 'All') btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        // Get key for the data lookup
+        function getActiveKey() {
+            if (currentSegment !== 'All') return `segment_${currentSegment}`;
+            if (currentRegion !== 'All') return `region_${currentRegion}`;
+            return 'All';
+        }
+
+        // Update dashboard contents
+        function updateDashboard() {
+            const key = getActiveKey();
+            const data = dashboardData[key];
+            if (!data) return;
+
+            // 1. Update KPI Values
+            document.getElementById('kpi-sales').innerText = formatCurrency(data.kpi.sales);
+            document.getElementById('kpi-profit').innerText = formatCurrency(data.kpi.profit);
+            document.getElementById('kpi-margin').innerText = `${data.kpi.margin}%`;
+            document.getElementById('kpi-delay').innerText = `${data.kpi.delay} Days`;
+
+            // Style Profit Card trend indicator
+            const profitTrendEl = document.getElementById('kpi-profit-trend');
+            const marginTrendEl = document.getElementById('kpi-margin-trend');
+            
+            if (data.kpi.profit >= 0) {
+                profitTrendEl.innerText = '▲ Profit Maker';
+                profitTrendEl.className = 'kpi-trend trend-up';
+            } else {
+                profitTrendEl.innerText = '▼ Loss Maker';
+                profitTrendEl.className = 'kpi-trend trend-down';
+            }
+
+            if (data.kpi.margin >= 15) {
+                marginTrendEl.innerText = 'Highly Efficient';
+                marginTrendEl.style.color = 'var(--accent-green)';
+            } else if (data.kpi.margin >= 5) {
+                marginTrendEl.innerText = 'Healthy Margin';
+                marginTrendEl.style.color = 'var(--accent-blue)';
+            } else {
+                marginTrendEl.innerText = 'At Risk Margin';
+                marginTrendEl.style.color = 'var(--accent-red)';
+            }
+
+            // Update Executive Insight Banner text based on filter selection
+            updateInsightText(key, data);
+
+            // 2. Update Charts
+            renderTrendChart(data.monthly);
+            renderDiscountChart(data.discounts);
+            renderCategoryChart(data.category);
+            renderLossChart(data.sub_loss);
+        }
+
+        function updateInsightText(key, data) {
+            const insightTitle = document.getElementById('insight-title');
+            const insightDesc = document.getElementById('insight-desc');
+
+            if (key === 'All') {
+                insightTitle.innerText = "Executive Summary: Pricing Leakage Identified";
+                insightDesc.innerText = "High-discount operations (>20%) are generating massive losses (-$135,376 profit / -37.3% average margin), draining profits from the zero-discount segment ($320,988 profit). Restricting binder and table discounts represents a major margin optimization opportunity.";
+            } else if (key.startsWith('segment_')) {
+                const segName = key.replace('segment_', '');
+                insightTitle.innerText = `${segName} Segment Analysis`;
+                if (segName === 'Consumer') {
+                    insightDesc.innerText = "Consumer is the highest revenue segment ($1.16M) but suffers from low margins due to high binder discounting. Optimization should target reducing maximum consumer discount rates.";
+                } else if (segName === 'Corporate') {
+                    insightDesc.innerText = "Corporate segment demonstrates highly stable profitability (12% margin) across regions. Focus on volume-based upsells of Office Supplies.";
+                } else {
+                    insightDesc.innerText = "Home Office segment yields the highest overall margin spikes (up to 20% in East region), indicating premium willingness. High average sales values.";
+                }
+            } else {
+                const regName = key.replace('region_', '');
+                insightTitle.innerText = `${regName} Region Analysis`;
+                if (regName === 'West') {
+                    insightDesc.innerText = "West is the leading profit performer ($108K profit) with high margins (15.5%+). Excellent operational delays (avg. 3.9 days). Scale marketing spend here.";
+                } else if (regName === 'East') {
+                    insightDesc.innerText = "East region is a major revenue driver with Home Office leads topping 20.9% margin. Highly consistent Standard Class ship performance.";
+                } else if (regName === 'Central') {
+                    insightDesc.innerText = "Central region exhibits significant margin depression (Consumer segment at only 3.4% margin) due to aggressive promotional discount strategies.";
+                } else {
+                    insightDesc.innerText = "South region has excellent Consumer margins (13.76%) but shows shipping delay peaks for Furniture categories. Focus on transport logistics.";
+                }
+            }
+        }
+
+        // RENDER FUNCTIONS FOR CHART.JS
+
+        function renderTrendChart(monthlyData) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            
+            if (trendChartObj) trendChartObj.destroy();
+
+            trendChartObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthlyData.labels,
+                    datasets: [
+                        {
+                            label: 'Revenue ($)',
+                            data: monthlyData.sales,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Operating Profit ($)',
+                            data: monthlyData.profit,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#3b82f6', font: { family: 'Outfit' } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#10b981', font: { family: 'Outfit' } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f3f4f6', font: { family: 'Outfit' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDiscountChart(discountData) {
+            const ctx = document.getElementById('discountChart').getContext('2d');
+            
+            if (discountChartObj) discountChartObj.destroy();
+
+            const labels = discountData.map(d => d.band);
+            const margins = discountData.map(d => d.margin);
+            const colors = margins.map(m => m >= 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(239, 68, 68, 0.75)');
+            const borders = margins.map(m => m >= 0 ? '#10b981' : '#ef4444');
+
+            discountChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Avg Profit Margin %',
+                        data: margins,
+                        backgroundColor: colors,
+                        borderColor: borders,
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function renderCategoryChart(categoryData) {
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            
+            if (categoryChartObj) categoryChartObj.destroy();
+
+            categoryChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: categoryData.labels,
+                    datasets: [
+                        {
+                            label: 'Sales ($)',
+                            data: categoryData.sales,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: '#3b82f6',
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        },
+                        {
+                            label: 'Profit ($)',
+                            data: categoryData.profit,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: '#10b981',
+                            borderWidth: 1.5,
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f3f4f6', font: { family: 'Outfit' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderLossChart(subLossData) {
+            const ctx = document.getElementById('lossChart').getContext('2d');
+            
+            if (lossChartObj) lossChartObj.destroy();
+
+            // Handle case where there are no losses (e.g. some filtered subset)
+            const labels = subLossData.labels || [];
+            const losses = subLossData.losses || [];
+
+            lossChartObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Leakage / Losses ($)',
+                        data: losses,
+                        backgroundColor: 'rgba(239, 68, 68, 0.75)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1.5,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#9ca3af', font: { family: 'Outfit' } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // Initialize dashboard on load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateDashboard();
+        });
+    </script>
+</body>
+</html>
