@@ -1,5 +1,6 @@
 import os
 import urllib.request
+import urllib.parse
 import json
 import base64
 
@@ -64,7 +65,9 @@ def upload_file(abs_path, github_path):
         
     encoded_content = base64.b64encode(content).decode("utf-8")
     
-    url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{github_path}"
+    # URL encode the github path to handle spaces and special characters
+    encoded_github_path = urllib.parse.quote(github_path)
+    url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{encoded_github_path}"
     
     # Check if file already exists to get its SHA (for update)
     sha = None
